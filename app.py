@@ -6,11 +6,19 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from pathlib import Path
 
+# Import services
+from services.database import GalleryDB
+from services.images import ImageService
+
 # Load configuration
 with open('config.json', 'r') as f:
     config = json.load(f)
 
 app = Flask(__name__)
+
+# Initialize services
+db = GalleryDB(config)
+image_service = ImageService(config)
 
 # Ensure output directory exists
 output_dir = Path(config['files']['output_dir'])
@@ -27,6 +35,19 @@ def generate_filename(prompt):
     timestamp = datetime.now().strftime("%m%d_%H%M")
     
     return f"{prompt_part}_{timestamp}.png"
+
+def get_file_info(filename):
+    """Get live filesystem data for a file"""
+    file_path = output_dir / filename
+    if not file_path.exists():
+        return None
+    
+    stat = file_path.stat()
+    return {
+        'file_size': stat.st_size,
+        'created_at': datetime.fromtimestamp(stat.st_ctime).strftime('%Y-%m-%d %H:%M:%S'),
+        'modified_at': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+    }
 
 def call_sd_api(prompt, size=None, count=None):
     """Call the Stable Diffusion API"""
@@ -61,7 +82,8 @@ def save_image(b64_data, filename):
 @app.route('/')
 def index():
     """Main page"""
-    return render_template('index.html')
+    return render_template('index.html', 
+                         max_prompt_length=config['files']['max_prompt_length'])
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -84,11 +106,29 @@ def generate():
         filename = generate_filename(prompt)
         filepath = save_image(b64_image, filename)
         
+        # Store only AI-specific metadata in database
+        db.add_image(
+            filename=filename,
+            prompt=prompt,
+            model=config['sd_api']['model'],
+            size=data.get('size', config['sd_api']['default_size'])
+            # Note: seed, steps, cfg_scale could be added if SD API provides them
+        )
+        
+        # Generate thumbnail
+        thumbnail_url = image_service.get_thumbnail_url(filename)
+        
+        # Get live file info for response
+        file_info = get_file_info(filename)
+        file_size = file_info['file_size'] if file_info else 0
+        
         return jsonify({
             'success': True,
             'filename': filename,
             'url': f'/images/{filename}',
-            'prompt': prompt
+            'thumbnail_url': thumbnail_url,
+            'prompt': prompt,
+            'file_size': file_size
         })
         
     except Exception as e:
@@ -98,6 +138,45 @@ def generate():
 def serve_image(filename):
     """Serve generated images"""
     return send_from_directory(output_dir, filename)
+
+@app.route('/thumbs/<filename>')
+def serve_thumbnail(filename):
+    """Serve thumbnail images"""
+    thumbs_dir = Path(config['files']['thumbs_dir'])
+    return send_from_directory(thumbs_dir, filename)
+
+@app.route('/gallery')
+def gallery():
+    """Gallery page"""
+    return render_template('gallery.html')
+
+@app.route('/api/gallery')
+def api_gallery():
+    """API endpoint for gallery data - combines AI metadata with live file info"""
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', config['gallery']['items_per_page']))
+    
+    gallery_data = db.get_paginated_images(page, per_page)
+    
+    # Enrich with thumbnail URLs and live file info
+    for image in gallery_data['images']:
+        image['thumbnail_url'] = image_service.get_thumbnail_url(image['filename'])
+        image['image_url'] = f"/images/{image['filename']}"
+        
+        # Add live filesystem data
+        file_info = get_file_info(image['filename'])
+        if file_info:
+            image.update(file_info)  # Add file_size, created_at, modified_at
+        else:
+            image['file_exists'] = False
+    
+    return jsonify(gallery_data)
+
+@app.route('/api/gallery/stats')
+def api_gallery_stats():
+    """API endpoint for gallery statistics"""
+    stats = db.get_stats()
+    return jsonify(stats)
 
 if __name__ == '__main__':
     app.run(

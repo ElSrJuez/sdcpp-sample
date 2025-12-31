@@ -1,1 +1,6 @@
 config.json
+gallery.json
+out/*
+!out/.gitkeep
+out/thumbs/*
+!out/thumbs/.gitkeep

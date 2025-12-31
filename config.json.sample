@@ -1,7 +1,7 @@
 {
   "sd_api": {
-    "url": "http://.0.0.0:4242/v1/images/generations",
-    "model": "z_image_turbo",
+    "url": "http://your-sd-server:4242/v1/images/generations",
+    "model": "your_model_name",
     "default_size": "512x512",
     "default_count": 1,
     "response_format": "b64_json"
@@ -13,6 +13,12 @@
   },
   "files": {
     "output_dir": "out",
+    "thumbs_dir": "out/thumbs",
     "max_prompt_length": 200
+  },
+  "gallery": {
+    "thumbnail_size": [300, 300],
+    "items_per_page": 20,
+    "db_file": "gallery.json"
   }
 }

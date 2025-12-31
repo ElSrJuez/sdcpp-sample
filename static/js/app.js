@@ -33,7 +33,10 @@ class ImageGenerator {
         const count = this.promptInput.value.length;
         this.charCount.textContent = count;
         
-        if (count > 450) {
+        const maxLength = parseInt(this.promptInput.getAttribute('maxlength'));
+        const warningThreshold = Math.floor(maxLength * 0.9);
+        
+        if (count > warningThreshold) {
             this.charCount.style.color = '#dc2626';
         } else {
             this.charCount.style.color = '#6b7280';

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gallery - AI Image Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-nav">
+                <a href="/" class="nav-link">&larr; Generate</a>
+                <div class="header-content">
+                    <h1>Gallery</h1>
+                    <p id="galleryStats">Loading...</p>
+                </div>
+                <div class="nav-spacer"></div>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Gallery Grid -->
+            <div class="gallery-grid" id="galleryGrid">
+                <div class="loading-placeholder">
+                    <div class="loader-large"></div>
+                    <p>Loading gallery...</p>
+                </div>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more-container" id="loadMoreContainer">
+                <button class="load-more-btn" id="loadMoreBtn">
+                    Load More Images
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">🎨</div>
+                <h3>No Images Yet</h3>
+                <p>Generate your first AI image to see it here!</p>
+                <a href="/" class="generate-link">Start Creating</a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Modal for full-size viewing -->
+    <div class="image-modal" id="imageModal">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img class="modal-image" id="modalImage" src="" alt="">
+                <div class="modal-nav">
+                    <button class="modal-nav-btn modal-prev" id="modalPrev">&larr;</button>
+                    <button class="modal-nav-btn modal-next" id="modalNext">&rarr;</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="image-meta" id="imageMeta">
+                    <!-- Image metadata will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+</body>
+</html>

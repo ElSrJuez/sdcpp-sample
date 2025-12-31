@@ -9,8 +9,14 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>AI Image Generator</h1>
-            <p>Create stunning images with AI</p>
+            <div class="header-nav">
+                <div class="nav-spacer"></div>
+                <div class="header-content">
+                    <h1>AI Image Generator</h1>
+                    <p>Create stunning images with AI</p>
+                </div>
+                <a href="/gallery" class="nav-link">Gallery</a>
+            </div>
         </header>
 
         <main class="main">
@@ -20,11 +26,11 @@
                         id="promptInput" 
                         class="prompt-input" 
                         placeholder="Describe the image you want to generate..."
-                        maxlength="500"
+                        maxlength="{{ max_prompt_length }}"
                         required
                     ></textarea>
                     <div class="char-counter">
-                        <span id="charCount">0</span>/500
+                        <span id="charCount">0</span>/{{ max_prompt_length }}</div>
                     </div>
                 </div>
                 
