@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AI Image Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>AI Image Generator</h1>
+            <p>Create stunning images with AI</p>
+        </header>
+
+        <main class="main">
+            <form class="prompt-form" id="promptForm">
+                <div class="input-group">
+                    <textarea 
+                        id="promptInput" 
+                        class="prompt-input" 
+                        placeholder="Describe the image you want to generate..."
+                        maxlength="500"
+                        required
+                    ></textarea>
+                    <div class="char-counter">
+                        <span id="charCount">0</span>/500
+                    </div>
+                </div>
+                
+                <button type="submit" class="generate-btn" id="generateBtn">
+                    <span class="btn-text">Generate Image</span>
+                    <span class="btn-loader" id="loader"></span>
+                </button>
+            </form>
+
+            <div class="result-area" id="resultArea">
+                <div class="image-container" id="imageContainer">
+                    <!-- Generated image will appear here -->
+                </div>
+                
+                <div class="error-message" id="errorMessage">
+                    <!-- Error messages will appear here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

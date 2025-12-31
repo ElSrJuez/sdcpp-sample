@@ -1,0 +1,18 @@
+{
+  "sd_api": {
+    "url": "http://phantom.homenet:4242/v1/images/generations",
+    "model": "z_image_turbo",
+    "default_size": "512x512",
+    "default_count": 1,
+    "response_format": "b64_json"
+  },
+  "app": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": false
+  },
+  "files": {
+    "output_dir": "out",
+    "max_prompt_length": 500
+  }
+}
