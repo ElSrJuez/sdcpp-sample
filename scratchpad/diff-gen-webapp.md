@@ -94,17 +94,36 @@ diff-webapp/
 
 ### Phase 1: Mobile-First Core
 - [x] 1. SD API working (confirmed via PowerShell)
-- [ ] 2. Mobile-responsive Flask app with touch-friendly prompt input
-- [ ] 3. Responsive image generation and display
-- [ ] 4. Always File saving with timestamps
-- [ ] 5. Basic mobile gestures (tap, swipe)
+- [x] 2. Mobile-responsive Flask app with touch-friendly prompt input
+- [x] 3. Responsive image generation and display
+- [x] 4. Always File saving with timestamps
+- [x] 5. Basic mobile gestures (tap, swipe)
 
 ### Phase 2: Attractive Mobile UI
-- [ ] 6. Modern CSS with mobile-first responsive design
-- [ ] 7. Smooth loading animations and transitions
-- [ ] 8. Touch-optimized error handling and feedback
-- [ ] 9. Swipeable image gallery with smooth transitions
-- [ ] 10. Device orientation optimization
+**Focus: Simple but attractive Mobile Gallery with basic AI image meta info tracking (TinyDB)**
+
+**Gallery Features:**
+- Responsive grid layout (1 column mobile, 2-3 desktop)
+- Touch-optimized thumbnails with smooth hover effects  
+- Swipeable image carousel for full-size viewing
+- Long-press for quick actions on mobile
+- Basic metadata display (model, prompt, timestamp, size)
+
+**Implementation Tasks:**
+- [ ] 6. Add TinyDB to requirements and integrate for metadata storage
+- [ ] 7. Create gallery route and template with responsive grid
+- [ ] 8. Update image generation to store metadata in TinyDB
+- [ ] 9. Implement thumbnail generation for performance
+- [ ] 10. Add swipeable carousel for full-size image viewing
+- [ ] 11. Enhance CSS with gallery styling and smooth transitions
+- [ ] 12. Add touch gestures for gallery navigation
+
+**Development Notes:**
+- TinyDB file: `gallery.json` (simple, no setup required)
+- Thumbnail sizes: 300x300 for mobile, 400x400 for desktop
+- Metadata schema: `{id, filename, prompt, model, size, timestamp, file_size}`
+- Use CSS Grid for responsive layout (auto-fit, minmax)
+- Implement lazy loading for thumbnails on mobile
 
 ### Phase 3: Enhanced Mobile Experience
 - [ ] 11. Touch-friendly prompt presets with quick selection
@@ -121,11 +140,6 @@ diff-webapp/
 - Swipe gestures for multiple images on mobile
 - Gesture support and haptic feedback
 - Progressive Web App (PWA) capabilities for home screen installation
-- Mobile Gallery:
-  - Responsive grid layout (1 column mobile, 2-3 desktop)
-  - Touch-optimized thumbnails with smooth hover effects
-  - Swipeable image carousel for full-size viewing
-  - Long-press for quick actions on mobile
 - File Management:
   - Cleanup old files (optional)
   - Batch operations
@@ -134,13 +148,31 @@ diff-webapp/
 - Python 3.8+
 - Flask with mobile-optimized templates
 - Requests library for HTTP calls
+- TinyDB for lightweight metadata storage
+- Pillow (PIL) for thumbnail generation
 - CSS Framework: Custom responsive CSS or lightweight framework (Bootstrap/Tailwind)
 - JavaScript: Vanilla JS with touch event support
 - PWA support: Service worker for offline capabilities
-- Image optimization: PIL/Pillow for thumbnail generation
 - Access to SD server at configured endpoint
 
 ## Configuration
 - Server URL configurable via config.json
 - Output directory configurable
+- Gallery settings (thumbnail sizes, pagination)
+
+## Development Considerations
+
+### Phase 2 Technical Notes
+- **TinyDB Integration**: Lightweight JSON-based database, perfect for metadata
+- **Image Processing**: Generate thumbnails on upload, serve optimized versions
+- **Mobile Performance**: Lazy load thumbnails, infinite scroll or pagination
+- **File Structure**: Organize thumbnails in separate directory (`out/thumbs/`)
+- **Error Handling**: Graceful degradation if thumbnails missing
+- **Config Extensions**: Add gallery settings to config.json
+
+### Code Architecture
+- **Database Layer**: Simple TinyDB operations (insert, query, update)
+- **Image Service**: Separate module for thumbnail generation and serving
+- **Gallery Routes**: RESTful endpoints for gallery data
+- **Frontend Components**: Modular JS for gallery, carousel, and touch handling
 - Default generation parameters
