@@ -50,7 +50,7 @@ def get_file_info(filename):
     }
 
 def call_sd_api(prompt, size=None, count=None):
-    """Call the Stable Diffusion API"""
+    """Call the Stable Diffusion API with server's actual supported parameters"""
     payload = {
         "model": config['sd_api']['model'],
         "prompt": prompt,
@@ -98,21 +98,22 @@ def generate():
         if len(prompt) > config['files']['max_prompt_length']:
             return jsonify({'error': 'Prompt too long'}), 400
         
-        # Call SD API
-        result = call_sd_api(prompt)
+        # Call SD API (server controls all generation parameters)
+        size_param = data.get('size', config['sd_api']['default_size'])
+        result = call_sd_api(prompt, size_param)
         
-        # Save image
-        b64_image = result['data'][0]['b64_json']
+        # Extract image data
+        image_data = result['data'][0]
+        b64_image = image_data['b64_json']
         filename = generate_filename(prompt)
         filepath = save_image(b64_image, filename)
         
-        # Store only AI-specific metadata in database
+        # Store AI-specific metadata (only what we control/know)
         db.add_image(
             filename=filename,
             prompt=prompt,
             model=config['sd_api']['model'],
-            size=data.get('size', config['sd_api']['default_size'])
-            # Note: seed, steps, cfg_scale could be added if SD API provides them
+            size=size_param
         )
         
         # Generate thumbnail

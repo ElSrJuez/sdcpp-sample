@@ -211,7 +211,7 @@ class Gallery {
         this.modalImage.src = image.image_url;
         this.modalImage.alt = image.prompt;
         
-        // Update metadata - show AI generation details
+        // Update metadata - show actual generation details
         const genDate = new Date(image.generation_timestamp || image.created_at || image.timestamp).toLocaleString();
         
         let metaHTML = `
@@ -220,10 +220,10 @@ class Gallery {
             <div><strong>Generated:</strong> ${genDate}</div>
         `;
         
-        // Add optional AI parameters if available
-        if (image.seed) metaHTML += `<div><strong>Seed:</strong> ${image.seed}</div>`;
-        if (image.steps) metaHTML += `<div><strong>Steps:</strong> ${image.steps}</div>`;
-        if (image.cfg_scale) metaHTML += `<div><strong>CFG Scale:</strong> ${image.cfg_scale}</div>`;
+        // Add server-controlled parameters if available
+        if (image.server_info) {
+            metaHTML += `<div><strong>Method:</strong> ${image.server_info.method} • <strong>Steps:</strong> ${image.server_info.steps} • <strong>Seed:</strong> ${image.server_info.seed}</div>`;
+        }
         
         this.imageMeta.innerHTML = metaHTML;
         

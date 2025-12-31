@@ -15,24 +15,24 @@ class GalleryDB:
         self.db = TinyDB(self.db_path)
         self.images = self.db.table('images')
     
-    def add_image(self, filename, prompt, model=None, size=None, seed=None, steps=None, cfg_scale=None):
-        """Add AI-specific metadata to gallery - no filesystem duplication"""
+    def add_image(self, filename, prompt, model=None, size=None):
+        """Add AI-specific metadata - only what we can actually control/know"""
         
         metadata = {
             'id': len(self.images) + 1,
             'filename': filename,  # Reference to file only
-            # AI Generation Parameters (the valuable metadata)
+            # AI Generation Parameters (what we actually know)
             'prompt': prompt,
             'model': model or self.config['sd_api']['model'],
             'size': size or self.config['sd_api']['default_size'],
-            'seed': seed,  # Random seed used (if available)
-            'steps': steps,  # Inference steps (if available) 
-            'cfg_scale': cfg_scale,  # CFG scale (if available)
-            'generation_timestamp': datetime.now().isoformat()  # When AI generated, not file created
+            'generation_timestamp': datetime.now().isoformat(),
+            # Server-controlled parameters (for display only)
+            'server_info': {
+                'method': 'Euler',  # Fixed by server
+                'steps': 20,       # Fixed by server 
+                'seed': 42         # Fixed by server (based on logs)
+            }
         }
-        
-        # Remove None values to keep DB clean
-        metadata = {k: v for k, v in metadata.items() if v is not None}
         
         return self.images.insert(metadata)
     

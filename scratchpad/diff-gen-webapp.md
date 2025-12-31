@@ -108,22 +108,30 @@ diff-webapp/
 - Swipeable image carousel for full-size viewing
 - Long-press for quick actions on mobile
 - Basic metadata display (model, prompt, timestamp, size)
+- Server parameter display (method: Euler, steps: 20, seed: 42 - server controlled)
 
 **Implementation Tasks:**
-- [ ] 6. Add TinyDB to requirements and integrate for metadata storage
-- [ ] 7. Create gallery route and template with responsive grid
-- [ ] 8. Update image generation to store metadata in TinyDB
-- [ ] 9. Implement thumbnail generation for performance
-- [ ] 10. Add swipeable carousel for full-size image viewing
-- [ ] 11. Enhance CSS with gallery styling and smooth transitions
-- [ ] 12. Add touch gestures for gallery navigation
+- [x] 6. Add TinyDB to requirements and integrate for metadata storage
+- [x] 7. Create gallery route and template with responsive grid
+- [x] 8. Update image generation to store metadata in TinyDB
+- [x] 9. Implement thumbnail generation for performance
+- [x] 10. Add swipeable carousel for full-size image viewing
+- [x] 11. Enhance CSS with gallery styling and smooth transitions
+- [x] 12. Add touch gestures for gallery navigation
 
 **Development Notes:**
 - TinyDB file: `gallery.json` (simple, no setup required)
 - Thumbnail sizes: 300x300 for mobile, 400x400 for desktop
-- Metadata schema: `{id, filename, prompt, model, size, timestamp, file_size}`
+- Metadata schema: `{id, filename, prompt, model, size, generation_timestamp, server_info}`
+- Server parameters are FIXED: Euler method, 20 steps, seed 42 (not user controllable)
 - Use CSS Grid for responsive layout (auto-fit, minmax)
 - Implement lazy loading for thumbnails on mobile
+
+**Server Reality Check:**
+- ❌ Advanced parameters (steps, cfg_scale, seed) NOT controllable via API
+- ✅ Only prompt, model, size, n, response_format are API parameters
+- ✅ Server uses fixed: Euler method, 20 steps, seed 42
+- 📋 **TODO**: Research server documentation for actual parameter support
 
 ### Phase 3: Enhanced Mobile Experience
 - [ ] 11. Touch-friendly prompt presets with quick selection
