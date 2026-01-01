@@ -88,6 +88,17 @@
         </main>
     </div>
 
+    <script>
+        // Pass config from backend to frontend
+        window.APP_CONFIG = {
+            maxPromptLength: {{ max_prompt_length }},
+            polling: {
+                intervalMs: {{ polling_config.interval_ms }},
+                maxTimeMs: {{ polling_config.max_time_ms }},
+                maxRetries: {{ polling_config.max_retries }}
+            }
+        };
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ import base64
 import threading
 import uuid
 import time
+import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from pathlib import Path
@@ -19,6 +20,10 @@ with open('config.json', 'r') as f:
 
 app = Flask(__name__)
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Job management for async processing
 jobs = {}
 jobs_lock = threading.Lock()
@@ -29,7 +34,7 @@ class JobStatus:
     COMPLETED = "completed"
     FAILED = "failed"
 
-def create_job(prompt, size):
+def create_job(prompt, size, quality='low'):
     """Create a new background job"""
     job_id = str(uuid.uuid4())
     with jobs_lock:
@@ -38,43 +43,64 @@ def create_job(prompt, size):
             'status': JobStatus.PENDING,
             'prompt': prompt,
             'size': size,
+            'quality': quality,
             'progress': 0,
             'message': 'Queued for processing',
             'created_at': datetime.now().isoformat(),
             'result': None,
             'error': None
         }
+    logger.info(f"Created job {job_id}: {prompt[:50]}... (size: {size}, quality: {quality})")
     return job_id
 
 def get_job(job_id):
     """Get job status"""
     with jobs_lock:
-        return jobs.get(job_id, None)
+        job = jobs.get(job_id, None)
+        if job:
+            logger.debug(f"Job {job_id} status: {job['status']} ({job['progress']}%)")
+        else:
+            logger.warning(f"Job {job_id} not found")
+        return job
 
 def update_job(job_id, **updates):
     """Update job status"""
     with jobs_lock:
         if job_id in jobs:
             jobs[job_id].update(updates)
+            logger.info(f"Job {job_id} updated: {updates}")
+        else:
+            logger.error(f"Attempted to update non-existent job: {job_id}")
 
-def process_image_generation(job_id, prompt, size):
+def process_image_generation(job_id, prompt, size, quality='low'):
     """Background function to process image generation"""
+    logger.info(f"Starting background processing for job {job_id}")
     try:
         update_job(job_id, status=JobStatus.PROCESSING, message="Starting generation...", progress=10)
         
-        # Call SD API
-        result = call_sd_api(prompt, size)
+        # Map quality to steps
+        quality_steps = {'low': 4, 'medium': 10, 'high': 20}
+        steps = quality_steps.get(quality, 4)
+        
+        # Build embedded prompt with XML parameters
+        embedded_prompt = f'{prompt} <sd_cpp_extra_args>{{"steps": {steps}}}</sd_cpp_extra_args>'
+        logger.info(f"Job {job_id}: Using {steps} steps for {quality} quality")
+        logger.debug(f"Job {job_id}: Embedded prompt: {embedded_prompt}")
+        
+        # Call SD API with embedded prompt
+        update_job(job_id, message=f"Calling SD API ({quality} quality, {steps} steps)...", progress=20)
+        result = call_sd_api(embedded_prompt, size)
         update_job(job_id, message="Processing server response...", progress=80)
         
         # Extract image data
         image_data = result['data'][0]
         b64_image = image_data['b64_json']
-        filename = generate_filename(prompt)
+        filename = generate_filename(prompt)  # Use clean prompt for filename
         filepath = save_image(b64_image, filename)
         
         update_job(job_id, message="Saving to database...", progress=90)
         
-        # Store metadata
+        # Store metadata with quality
         db.add_image(filename, prompt, config['sd_api']['model'], size)
         
         # Generate thumbnail
@@ -95,10 +121,13 @@ def process_image_generation(job_id, prompt, size):
                       'thumbnail_url': thumbnail_url,
                       'prompt': prompt,
                       'size': size,
+                      'quality': quality,
                       'file_size': file_size
                   })
+        logger.info(f"Job {job_id} completed successfully")
                   
     except Exception as e:
+        logger.error(f"Job {job_id} failed with error: {str(e)}")
         update_job(job_id, 
                   status=JobStatus.FAILED, 
                   error=str(e),
@@ -152,7 +181,7 @@ def call_sd_api(prompt, size=None, count=None):
             config['sd_api']['url'],
             json=payload,
             headers={'Content-Type': 'application/json'},
-            timeout=60  # Increased timeout to 60 seconds
+            timeout=config['sd_api']['timeout_seconds']
         )
         response.raise_for_status()
         return response.json()
@@ -171,7 +200,8 @@ def save_image(b64_data, filename):
 def index():
     """Main page"""
     return render_template('index.html', 
-                         max_prompt_length=config['files']['max_prompt_length'])
+                         max_prompt_length=config['files']['max_prompt_length'],
+                         polling_config=config['polling'])
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -188,15 +218,15 @@ def generate():
         
         # Get generation parameters
         size_param = data.get('size', config['sd_api']['default_size'])
-        quality_param = data.get('quality', 'low')  # Accept but don't use yet
+        quality_param = data.get('quality', 'low')
         
         # Create background job
-        job_id = create_job(prompt, size_param)
+        job_id = create_job(prompt, size_param, quality_param)
         
         # Start background processing
         thread = threading.Thread(
             target=process_image_generation, 
-            args=(job_id, prompt, size_param)
+            args=(job_id, prompt, size_param, quality_param)
         )
         thread.daemon = True
         thread.start()
@@ -214,9 +244,11 @@ def generate():
 @app.route('/generate/status/<job_id>', methods=['GET'])
 def get_generation_status(job_id):
     """Get the status of a generation job"""
+    logger.debug(f"Status check requested for job {job_id}")
     job = get_job(job_id)
     
     if not job:
+        logger.warning(f"Status check for unknown job: {job_id}")
         return jsonify({'error': 'Job not found'}), 404
     
     response = {
@@ -229,8 +261,10 @@ def get_generation_status(job_id):
     
     if job['status'] == JobStatus.COMPLETED and job['result']:
         response['result'] = job['result']
+        logger.debug(f"Job {job_id}: Returning completed result")
     elif job['status'] == JobStatus.FAILED and job['error']:
         response['error'] = job['error']
+        logger.debug(f"Job {job_id}: Returning error: {job['error']}")
     
     return jsonify(response)
 

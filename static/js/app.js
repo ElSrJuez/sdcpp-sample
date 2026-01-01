@@ -11,6 +11,7 @@ class ImageGenerator {
         this.errorMessage = document.getElementById('errorMessage');
         
         this.init();
+        console.log('ImageGenerator initialized');
     }
     
     init() {
@@ -65,6 +66,8 @@ class ImageGenerator {
             const size = sizeElement ? sizeElement.value : '512x512';
             const quality = qualityElement ? qualityElement.value : 'low';
             
+            console.log('Starting generation:', { size, quality });
+            
             // Start generation job
             const response = await fetch('/generate', {
                 method: 'POST',
@@ -84,6 +87,10 @@ class ImageGenerator {
                 throw new Error(data.error || 'Generation failed');
             }
             
+            if (!data.job_id) {
+                throw new Error('No job ID received from server');
+            }
+            
             // Start polling for job status
             this.pollJobStatus(data.job_id, prompt);
             
@@ -94,15 +101,16 @@ class ImageGenerator {
     }
     
     async pollJobStatus(jobId, originalPrompt) {
-        const maxPollingTime = 120000; // 2 minutes max
+        console.log(`Starting polling for job: ${jobId}`);
         const startTime = Date.now();
-        const pollInterval = 2000; // Poll every 2 seconds
+        let retryCount = 0;
         
         const poll = async () => {
+            const elapsed = Date.now() - startTime;
+            
             try {
-                // Check if we've been polling too long
-                if (Date.now() - startTime > maxPollingTime) {
-                    throw new Error('Generation timeout - please try again');
+                if (elapsed > window.APP_CONFIG.polling.maxTimeMs) {
+                    throw new Error(`Generation timeout after ${Math.round(elapsed/1000)} seconds`);
                 }
                 
                 const response = await fetch(`/generate/status/${jobId}`);
@@ -112,7 +120,7 @@ class ImageGenerator {
                     throw new Error(status.error || 'Failed to check status');
                 }
                 
-                // Update progress message
+                retryCount = 0;
                 this.updateProgress(status.progress, status.message);
                 
                 if (status.status === 'completed') {
@@ -121,17 +129,20 @@ class ImageGenerator {
                 } else if (status.status === 'failed') {
                     throw new Error(status.error || 'Generation failed');
                 } else {
-                    // Still processing, continue polling
-                    setTimeout(poll, pollInterval);
+                    setTimeout(poll, window.APP_CONFIG.polling.intervalMs);
                 }
                 
             } catch (error) {
-                this.showError(error.message);
-                this.setLoading(false);
+                retryCount++;
+                if (retryCount <= window.APP_CONFIG.polling.maxRetries) {
+                    setTimeout(poll, window.APP_CONFIG.polling.intervalMs);
+                } else {
+                    this.showError(error.message);
+                    this.setLoading(false);
+                }
             }
         };
         
-        // Start polling
         poll();
     }
     
@@ -155,6 +166,7 @@ class ImageGenerator {
         info.className = 'image-info';
         info.innerHTML = `
             <strong>Prompt:</strong> ${data.prompt}<br>
+            <strong>Size:</strong> ${data.size} • <strong>Quality:</strong> ${data.quality}<br>
             <strong>Filename:</strong> ${data.filename}
         `;
         
