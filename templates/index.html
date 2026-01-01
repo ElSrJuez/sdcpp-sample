@@ -20,7 +20,7 @@
         </header>
 
         <main class="main">
-            <form class="prompt-form" id="promptForm">
+            <form class="prompt-form" id="promptForm" method="post" action="/generate">
                 <div class="input-group">
                     <textarea 
                         id="promptInput" 
@@ -67,6 +67,22 @@
                         
                         <input type="radio" id="qualityHigh" name="quality" value="high">
                         <label for="qualityHigh" class="quality-btn">High<br><span class="quality-detail">Best (20 steps)</span></label>
+                    </div>
+                </div>
+
+                <!-- Advanced Parameters (Collapsible) -->
+                <div class="control-group advanced-section">
+                    <button type="button" class="advanced-toggle" id="advancedToggle">
+                        <span class="toggle-text">Advanced Parameters</span>
+                        <span class="toggle-icon">▼</span>
+                    </button>
+                    <div class="advanced-content" id="advancedContent">
+                        <div class="advanced-control">
+                            <label for="seedInput" class="advanced-label">Seed <span class="optional">(optional)</span></label>
+                            <input type="number" id="seedInput" name="seed" class="advanced-input" 
+                                   placeholder="Random (leave empty)" min="0" max="2147483647">
+                            <div class="advanced-hint">Set for reproducible results</div>
+                        </div>
                     </div>
                 </div>
                 

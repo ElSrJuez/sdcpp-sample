@@ -172,6 +172,7 @@ class Gallery {
                 <div class="gallery-meta">
                     <span class="gallery-date">${date}</span>
                     <span class="gallery-size">${image.size}</span>
+                    ${image.quality ? `<span class="gallery-quality">${image.quality}</span>` : ''}
                 </div>
             </div>
         `;
@@ -220,8 +221,14 @@ class Gallery {
             <div><strong>Generated:</strong> ${genDate}</div>
         `;
         
-        // Add server-controlled parameters if available
-        if (image.server_info) {
+        // Add generation parameters if available
+        if (image.parameters) {
+            const seedDisplay = image.parameters.user_seed !== null 
+                ? `${image.parameters.seed} (user specified)` 
+                : `${image.parameters.seed} (random)`;
+            metaHTML += `<div><strong>Quality:</strong> ${image.quality} (${image.parameters.steps} steps) • <strong>Seed:</strong> ${seedDisplay}</div>`;
+        } else if (image.server_info) {
+            // Fallback for old entries
             metaHTML += `<div><strong>Method:</strong> ${image.server_info.method} • <strong>Steps:</strong> ${image.server_info.steps} • <strong>Seed:</strong> ${image.server_info.seed}</div>`;
         }
         

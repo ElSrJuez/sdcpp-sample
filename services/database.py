@@ -15,22 +15,28 @@ class GalleryDB:
         self.db = TinyDB(self.db_path)
         self.images = self.db.table('images')
     
-    def add_image(self, filename, prompt, model=None, size=None):
-        """Add AI-specific metadata - only what we can actually control/know"""
+    def add_image(self, filename, prompt, model=None, size=None, quality='low', seed=None, actual_seed=None):
+        """Add AI-specific metadata with generation parameters"""
+        
+        # Map quality to steps for display
+        quality_steps = {'low': 4, 'medium': 10, 'high': 20}
+        steps = quality_steps.get(quality, 4)
         
         metadata = {
             'id': len(self.images) + 1,
             'filename': filename,  # Reference to file only
-            # AI Generation Parameters (what we actually know)
+            # AI Generation Parameters (what we actually control)
             'prompt': prompt,
             'model': model or self.config['sd_api']['model'],
             'size': size or self.config['sd_api']['default_size'],
+            'quality': quality,
             'generation_timestamp': datetime.now().isoformat(),
-            # Server-controlled parameters (for display only)
-            'server_info': {
-                'method': 'Euler',  # Fixed by server
-                'steps': 20,       # Fixed by server 
-                'seed': 42         # Fixed by server (based on logs)
+            # Generation parameters used
+            'parameters': {
+                'steps': steps,
+                'seed': actual_seed,  # The actual seed used (either specified or generated)
+                'user_seed': seed,    # The seed user specified (None if random)
+                'method': 'Euler'     # Fixed by server
             }
         }
         

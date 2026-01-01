@@ -27,7 +27,31 @@ class ImageGenerator {
         // Auto-resize textarea on mobile
         this.promptInput.addEventListener('input', () => this.autoResize());
         
+        // Advanced panel toggle
+        this.initAdvancedPanel();
+        
         this.updateCharCount();
+    }
+
+    initAdvancedPanel() {
+        const toggle = document.getElementById('advancedToggle');
+        const content = document.getElementById('advancedContent');
+        
+        console.log('Advanced panel elements:', { toggle, content });
+        
+        if (toggle && content) {
+            toggle.addEventListener('click', () => {
+                console.log('Advanced panel clicked');
+                toggle.classList.toggle('expanded');
+                content.classList.toggle('expanded');
+                console.log('Classes after toggle:', {
+                    toggleClasses: toggle.className,
+                    contentClasses: content.className
+                });
+            });
+        } else {
+            console.error('Advanced panel elements not found:', { toggle, content });
+        }
     }
     
     updateCharCount() {
@@ -66,7 +90,22 @@ class ImageGenerator {
             const size = sizeElement ? sizeElement.value : '512x512';
             const quality = qualityElement ? qualityElement.value : 'low';
             
-            console.log('Starting generation:', { size, quality });
+            // Get advanced parameters (only if specified by user)
+            const seedInput = document.getElementById('seedInput');
+            const seed = seedInput && seedInput.value.trim() !== '' ? parseInt(seedInput.value) : null;
+            
+            console.log('Starting generation:', { size, quality, seed: seed || 'random' });
+            
+            // Build request payload - only include advanced params if user specified them
+            const payload = { 
+                prompt: prompt,
+                size: size,
+                quality: quality
+            };
+            
+            if (seed !== null) {
+                payload.seed = seed;
+            }
             
             // Start generation job
             const response = await fetch('/generate', {
@@ -74,11 +113,7 @@ class ImageGenerator {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    prompt: prompt,
-                    size: size,
-                    quality: quality
-                })
+                body: JSON.stringify(payload)
             });
             
             const data = await response.json();
@@ -164,9 +199,15 @@ class ImageGenerator {
         // Create info element
         const info = document.createElement('div');
         info.className = 'image-info';
+        
+        const seedInfo = data.user_seed !== null 
+            ? `${data.seed} (user specified)` 
+            : `${data.seed} (random)`;
+        
         info.innerHTML = `
             <strong>Prompt:</strong> ${data.prompt}<br>
             <strong>Size:</strong> ${data.size} • <strong>Quality:</strong> ${data.quality}<br>
+            <strong>Seed:</strong> ${seedInfo}<br>
             <strong>Filename:</strong> ${data.filename}
         `;
         

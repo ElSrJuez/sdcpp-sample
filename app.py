@@ -6,6 +6,7 @@ import threading
 import uuid
 import time
 import logging
+import random
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from pathlib import Path
@@ -34,7 +35,7 @@ class JobStatus:
     COMPLETED = "completed"
     FAILED = "failed"
 
-def create_job(prompt, size, quality='low'):
+def create_job(prompt, size, quality='low', seed=None):
     """Create a new background job"""
     job_id = str(uuid.uuid4())
     with jobs_lock:
@@ -44,13 +45,15 @@ def create_job(prompt, size, quality='low'):
             'prompt': prompt,
             'size': size,
             'quality': quality,
+            'seed': seed,
             'progress': 0,
             'message': 'Queued for processing',
             'created_at': datetime.now().isoformat(),
             'result': None,
             'error': None
         }
-    logger.info(f"Created job {job_id}: {prompt[:50]}... (size: {size}, quality: {quality})")
+    seed_info = f"seed: {seed}" if seed is not None else "seed: random"
+    logger.info(f"Created job {job_id}: {prompt[:50]}... (size: {size}, quality: {quality}, {seed_info})")
     return job_id
 
 def get_job(job_id):
@@ -72,7 +75,7 @@ def update_job(job_id, **updates):
         else:
             logger.error(f"Attempted to update non-existent job: {job_id}")
 
-def process_image_generation(job_id, prompt, size, quality='low'):
+def process_image_generation(job_id, prompt, size, quality='low', seed=None):
     """Background function to process image generation"""
     logger.info(f"Starting background processing for job {job_id}")
     try:
@@ -82,10 +85,23 @@ def process_image_generation(job_id, prompt, size, quality='low'):
         quality_steps = {'low': 4, 'medium': 10, 'high': 20}
         steps = quality_steps.get(quality, 4)
         
+        # Build embedded parameters - only include seed if specified
+        embedded_params = {"steps": steps}
+        
+        if seed is not None:
+            embedded_params["seed"] = seed
+            actual_seed = seed
+        else:
+            # Generate a random seed and include it in parameters for consistent behavior
+            actual_seed = random.randint(0, 2147483647)
+            embedded_params["seed"] = actual_seed
+        
         # Build embedded prompt with XML parameters
-        embedded_prompt = f'{prompt} <sd_cpp_extra_args>{{"steps": {steps}}}</sd_cpp_extra_args>'
-        logger.info(f"Job {job_id}: Using {steps} steps for {quality} quality")
-        logger.debug(f"Job {job_id}: Embedded prompt: {embedded_prompt}")
+        embedded_prompt = f'{prompt} <sd_cpp_extra_args>{json.dumps(embedded_params)}</sd_cpp_extra_args>'
+        seed_info = f"seed: {actual_seed}" if seed is not None else f"seed: random ({actual_seed})"
+        logger.info(f"Job {job_id}: Using {steps} steps for {quality} quality, {seed_info}")
+        logger.info(f"Job {job_id}: Sending XML parameters: {json.dumps(embedded_params)}")
+        logger.debug(f"Job {job_id}: Full embedded prompt: {embedded_prompt}")
         
         # Call SD API with embedded prompt
         update_job(job_id, message=f"Calling SD API ({quality} quality, {steps} steps)...", progress=20)
@@ -100,8 +116,8 @@ def process_image_generation(job_id, prompt, size, quality='low'):
         
         update_job(job_id, message="Saving to database...", progress=90)
         
-        # Store metadata with quality
-        db.add_image(filename, prompt, config['sd_api']['model'], size)
+        # Store metadata with all generation parameters
+        db.add_image(filename, prompt, config['sd_api']['model'], size, quality, seed, actual_seed)
         
         # Generate thumbnail
         thumbnail_url = image_service.get_thumbnail_url(filename)
@@ -122,6 +138,8 @@ def process_image_generation(job_id, prompt, size, quality='low'):
                       'prompt': prompt,
                       'size': size,
                       'quality': quality,
+                      'seed': actual_seed,
+                      'user_seed': seed,
                       'file_size': file_size
                   })
         logger.info(f"Job {job_id} completed successfully")
@@ -219,14 +237,15 @@ def generate():
         # Get generation parameters
         size_param = data.get('size', config['sd_api']['default_size'])
         quality_param = data.get('quality', 'low')
+        seed_param = data.get('seed')  # None if not specified
         
         # Create background job
-        job_id = create_job(prompt, size_param, quality_param)
+        job_id = create_job(prompt, size_param, quality_param, seed_param)
         
         # Start background processing
         thread = threading.Thread(
             target=process_image_generation, 
-            args=(job_id, prompt, size_param, quality_param)
+            args=(job_id, prompt, size_param, quality_param, seed_param)
         )
         thread.daemon = True
         thread.start()
