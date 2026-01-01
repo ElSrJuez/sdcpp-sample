@@ -90,6 +90,120 @@ body {
     color: #6b7280;
 }
 
+/* Control Groups */
+.control-group {
+    margin-bottom: 1.5rem;
+}
+
+.control-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Size Options */
+.size-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.size-options input[type="radio"] {
+    display: none;
+}
+
+.size-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    touch-action: manipulation;
+    min-height: 60px;
+}
+
+.size-btn:hover {
+    border-color: #667eea;
+    background: #f8faff;
+}
+
+.size-options input[type="radio"]:checked + .size-btn {
+    border-color: #667eea;
+    background: #667eea;
+    color: white;
+}
+
+.size-detail {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-top: 0.25rem;
+}
+
+@media (min-width: 480px) {
+    .size-options {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* Quality Options */
+.quality-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.quality-options input[type="radio"] {
+    display: none;
+}
+
+.quality-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    touch-action: manipulation;
+    min-height: 60px;
+}
+
+.quality-btn:hover {
+    border-color: #667eea;
+    background: #f8faff;
+}
+
+.quality-options input[type="radio"]:checked + .quality-btn {
+    border-color: #667eea;
+    background: #667eea;
+    color: white;
+}
+
+.quality-detail {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-top: 0.25rem;
+}
+
 /* Generate Button */
 .generate-btn {
     width: 100%;

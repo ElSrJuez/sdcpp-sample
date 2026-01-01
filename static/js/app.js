@@ -59,13 +59,23 @@ class ImageGenerator {
         this.hideError();
         
         try {
+            // Get selected size and quality
+            const sizeElement = document.querySelector('input[name="size"]:checked');
+            const qualityElement = document.querySelector('input[name="quality"]:checked');
+            const size = sizeElement ? sizeElement.value : '512x512';
+            const quality = qualityElement ? qualityElement.value : 'low';
+            
             // Start generation job
             const response = await fetch('/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ 
+                    prompt: prompt,
+                    size: size,
+                    quality: quality
+                })
             });
             
             const data = await response.json();

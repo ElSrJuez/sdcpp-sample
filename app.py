@@ -188,6 +188,7 @@ def generate():
         
         # Get generation parameters
         size_param = data.get('size', config['sd_api']['default_size'])
+        quality_param = data.get('quality', 'low')  # Accept but don't use yet
         
         # Create background job
         job_id = create_job(prompt, size_param)

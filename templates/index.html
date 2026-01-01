@@ -34,6 +34,42 @@
                     </div>
                 </div>
                 
+                <!-- Size Selector -->
+                <div class="control-group">
+                    <label class="control-label">Size</label>
+                    <div class="size-options">
+                        <input type="radio" id="size256" name="size" value="256x256">
+                        <label for="size256" class="size-btn">Small<br><span class="size-detail">256×256</span></label>
+                        
+                        <input type="radio" id="size512" name="size" value="512x512" checked>
+                        <label for="size512" class="size-btn">Medium<br><span class="size-detail">512×512</span></label>
+                        
+                        <input type="radio" id="size1024w" name="size" value="1024x512">
+                        <label for="size1024w" class="size-btn">Wide<br><span class="size-detail">1024×512</span></label>
+                        
+                        <input type="radio" id="size1024h" name="size" value="512x1024">
+                        <label for="size1024h" class="size-btn">Tall<br><span class="size-detail">512×1024</span></label>
+                        
+                        <input type="radio" id="size1024" name="size" value="1024x1024">
+                        <label for="size1024" class="size-btn">Large<br><span class="size-detail">1024×1024</span></label>
+                    </div>
+                </div>
+
+                <!-- Quality Presets -->
+                <div class="control-group">
+                    <label class="control-label">Quality</label>
+                    <div class="quality-options">
+                        <input type="radio" id="qualityLow" name="quality" value="low" checked>
+                        <label for="qualityLow" class="quality-btn">Low<br><span class="quality-detail">Fast (4 steps)</span></label>
+                        
+                        <input type="radio" id="qualityMedium" name="quality" value="medium">
+                        <label for="qualityMedium" class="quality-btn">Medium<br><span class="quality-detail">10 steps</span></label>
+                        
+                        <input type="radio" id="qualityHigh" name="quality" value="high">
+                        <label for="qualityHigh" class="quality-btn">High<br><span class="quality-detail">Best (20 steps)</span></label>
+                    </div>
+                </div>
+                
                 <button type="submit" class="generate-btn" id="generateBtn">
                     <span class="btn-text">Generate Image</span>
                     <span class="btn-loader" id="loader"></span>
