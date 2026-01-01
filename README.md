@@ -81,34 +81,6 @@ The app delivers a premium mobile experience with:
 
 ## ⚙️ Configuration
 
-Complete settings management through `config.json`:
-
-```json
-{
-  "sd_api": {
-    "url": "http://phantom.homenet:4242/v1/images/generations",
-    "model": "z_image_turbo",
-    "default_size": "512x512",
-    "timeout_seconds": 300
-  },
-  "polling": {
-    "interval_ms": 3000,
-    "max_time_ms": 240000,
-    "max_retries": 3
-  },
-  "gallery": {
-    "thumbnail_size": [300, 300],
-    "items_per_page": 20,
-    "db_file": "gallery.json"
-  },
-  "files": {
-    "output_dir": "out",
-    "thumbs_dir": "out/thumbs",
-    "max_prompt_length": 200
-  }
-}
-```
-
 ### Key Configuration Areas
 - **SD API Integration**: Server URL, model selection, and timeout management
 - **Async Polling**: Frontend polling intervals and maximum wait times
