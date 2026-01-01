@@ -1,7 +1,7 @@
 __pycache__/
 .venv/
 config.json
-gallery.json
+*gallery.json
 out/*
 !out/.gitkeep
 out/thumbs/*
