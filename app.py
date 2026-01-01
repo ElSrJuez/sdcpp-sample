@@ -2,6 +2,9 @@ import json
 import os
 import requests
 import base64
+import threading
+import uuid
+import time
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from pathlib import Path
@@ -15,6 +18,91 @@ with open('config.json', 'r') as f:
     config = json.load(f)
 
 app = Flask(__name__)
+
+# Job management for async processing
+jobs = {}
+jobs_lock = threading.Lock()
+
+class JobStatus:
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+def create_job(prompt, size):
+    """Create a new background job"""
+    job_id = str(uuid.uuid4())
+    with jobs_lock:
+        jobs[job_id] = {
+            'id': job_id,
+            'status': JobStatus.PENDING,
+            'prompt': prompt,
+            'size': size,
+            'progress': 0,
+            'message': 'Queued for processing',
+            'created_at': datetime.now().isoformat(),
+            'result': None,
+            'error': None
+        }
+    return job_id
+
+def get_job(job_id):
+    """Get job status"""
+    with jobs_lock:
+        return jobs.get(job_id, None)
+
+def update_job(job_id, **updates):
+    """Update job status"""
+    with jobs_lock:
+        if job_id in jobs:
+            jobs[job_id].update(updates)
+
+def process_image_generation(job_id, prompt, size):
+    """Background function to process image generation"""
+    try:
+        update_job(job_id, status=JobStatus.PROCESSING, message="Starting generation...", progress=10)
+        
+        # Call SD API
+        result = call_sd_api(prompt, size)
+        update_job(job_id, message="Processing server response...", progress=80)
+        
+        # Extract image data
+        image_data = result['data'][0]
+        b64_image = image_data['b64_json']
+        filename = generate_filename(prompt)
+        filepath = save_image(b64_image, filename)
+        
+        update_job(job_id, message="Saving to database...", progress=90)
+        
+        # Store metadata
+        db.add_image(filename, prompt, config['sd_api']['model'], size)
+        
+        # Generate thumbnail
+        thumbnail_url = image_service.get_thumbnail_url(filename)
+        
+        # Get file info
+        file_info = get_file_info(filename)
+        file_size = file_info['file_size'] if file_info else 0
+        
+        # Mark as completed
+        update_job(job_id, 
+                  status=JobStatus.COMPLETED, 
+                  progress=100,
+                  message="Generation complete!",
+                  result={
+                      'filename': filename,
+                      'url': f'/images/{filename}',
+                      'thumbnail_url': thumbnail_url,
+                      'prompt': prompt,
+                      'size': size,
+                      'file_size': file_size
+                  })
+                  
+    except Exception as e:
+        update_job(job_id, 
+                  status=JobStatus.FAILED, 
+                  error=str(e),
+                  message=f"Generation failed: {str(e)}")
 
 # Initialize services
 db = GalleryDB(config)
@@ -64,7 +152,7 @@ def call_sd_api(prompt, size=None, count=None):
             config['sd_api']['url'],
             json=payload,
             headers={'Content-Type': 'application/json'},
-            timeout=30
+            timeout=60  # Increased timeout to 60 seconds
         )
         response.raise_for_status()
         return response.json()
@@ -87,7 +175,7 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    """Generate image from prompt"""
+    """Start async image generation and return job ID"""
     try:
         data = request.json
         prompt = data.get('prompt', '').strip()
@@ -98,42 +186,52 @@ def generate():
         if len(prompt) > config['files']['max_prompt_length']:
             return jsonify({'error': 'Prompt too long'}), 400
         
-        # Call SD API (server controls all generation parameters)
+        # Get generation parameters
         size_param = data.get('size', config['sd_api']['default_size'])
-        result = call_sd_api(prompt, size_param)
         
-        # Extract image data
-        image_data = result['data'][0]
-        b64_image = image_data['b64_json']
-        filename = generate_filename(prompt)
-        filepath = save_image(b64_image, filename)
+        # Create background job
+        job_id = create_job(prompt, size_param)
         
-        # Store AI-specific metadata (only what we control/know)
-        db.add_image(
-            filename=filename,
-            prompt=prompt,
-            model=config['sd_api']['model'],
-            size=size_param
+        # Start background processing
+        thread = threading.Thread(
+            target=process_image_generation, 
+            args=(job_id, prompt, size_param)
         )
+        thread.daemon = True
+        thread.start()
         
-        # Generate thumbnail
-        thumbnail_url = image_service.get_thumbnail_url(filename)
-        
-        # Get live file info for response
-        file_info = get_file_info(filename)
-        file_size = file_info['file_size'] if file_info else 0
-        
+        # Return job ID immediately
         return jsonify({
-            'success': True,
-            'filename': filename,
-            'url': f'/images/{filename}',
-            'thumbnail_url': thumbnail_url,
-            'prompt': prompt,
-            'file_size': file_size
+            'job_id': job_id,
+            'status': 'pending',
+            'message': 'Generation started'
         })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/generate/status/<job_id>', methods=['GET'])
+def get_generation_status(job_id):
+    """Get the status of a generation job"""
+    job = get_job(job_id)
+    
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
+    
+    response = {
+        'job_id': job_id,
+        'status': job['status'],
+        'progress': job['progress'],
+        'message': job['message'],
+        'created_at': job['created_at']
+    }
+    
+    if job['status'] == JobStatus.COMPLETED and job['result']:
+        response['result'] = job['result']
+    elif job['status'] == JobStatus.FAILED and job['error']:
+        response['error'] = job['error']
+    
+    return jsonify(response)
 
 @app.route('/images/<filename>')
 def serve_image(filename):

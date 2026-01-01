@@ -59,6 +59,7 @@ class ImageGenerator {
         this.hideError();
         
         try {
+            // Start generation job
             const response = await fetch('/generate', {
                 method: 'POST',
                 headers: {
@@ -73,12 +74,62 @@ class ImageGenerator {
                 throw new Error(data.error || 'Generation failed');
             }
             
-            this.displayImage(data);
+            // Start polling for job status
+            this.pollJobStatus(data.job_id, prompt);
             
         } catch (error) {
             this.showError(error.message);
-        } finally {
             this.setLoading(false);
+        }
+    }
+    
+    async pollJobStatus(jobId, originalPrompt) {
+        const maxPollingTime = 120000; // 2 minutes max
+        const startTime = Date.now();
+        const pollInterval = 2000; // Poll every 2 seconds
+        
+        const poll = async () => {
+            try {
+                // Check if we've been polling too long
+                if (Date.now() - startTime > maxPollingTime) {
+                    throw new Error('Generation timeout - please try again');
+                }
+                
+                const response = await fetch(`/generate/status/${jobId}`);
+                const status = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(status.error || 'Failed to check status');
+                }
+                
+                // Update progress message
+                this.updateProgress(status.progress, status.message);
+                
+                if (status.status === 'completed') {
+                    this.displayImage(status.result);
+                    this.setLoading(false);
+                } else if (status.status === 'failed') {
+                    throw new Error(status.error || 'Generation failed');
+                } else {
+                    // Still processing, continue polling
+                    setTimeout(poll, pollInterval);
+                }
+                
+            } catch (error) {
+                this.showError(error.message);
+                this.setLoading(false);
+            }
+        };
+        
+        // Start polling
+        poll();
+    }
+    
+    updateProgress(progress, message) {
+        // Update button text with progress
+        const btnText = this.generateBtn.querySelector('.btn-text');
+        if (btnText) {
+            btnText.textContent = `${message} (${progress}%)`;
         }
     }
     
@@ -126,12 +177,18 @@ class ImageGenerator {
     }
     
     setLoading(loading) {
+        const btnText = this.generateBtn.querySelector('.btn-text');
+        
         if (loading) {
             this.generateBtn.disabled = true;
             this.generateBtn.classList.add('loading');
         } else {
             this.generateBtn.disabled = false;
             this.generateBtn.classList.remove('loading');
+            // Reset button text
+            if (btnText) {
+                btnText.textContent = 'Generate Image';
+            }
         }
     }
     
