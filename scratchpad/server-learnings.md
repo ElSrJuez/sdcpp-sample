@@ -102,13 +102,13 @@ const QUALITY_PRESETS = {
 };
 ```
 
-### Advanced Parameters (Collapsed by Default)
+### Advanced Parameters (Always Visible)
 ```javascript
 // Advanced parameters - NO defaults, only sent when user specifies
-// UI should show empty/placeholder values, collapsed until clicked
+// UI always shows advanced controls at the bottom of the form (never collapsed)
 const ADVANCED_PARAMS = {
   cfg_scale: null,       // Guidance scale (server default used if not specified)
-  seed: null,            // Random seed (server random if not specified) 
+  seed: null,            // Random seed (server random if not specified)
   negative_prompt: "",   // Things to avoid (empty = not sent)
   clip_skip: null,       // CLIP layers to skip (server default if not specified)
   batch_count: null      // Override n parameter (server default if not specified)
@@ -157,7 +157,7 @@ Based on server code structure, these parameters are supported in the embedded J
    const advancedPrompt = `${userPrompt} <sd_cpp_extra_args>{"steps": ${qualitySteps[quality]}}</sd_cpp_extra_args>`;
    ```
 
-2. **Advanced Mode**: Optional parameter control (collapsed by default)
+2. **Advanced Mode**: Optional parameter control (always visible)
    ```javascript
    // Only build parameters that user explicitly set
    const advancedParams = {};
@@ -213,7 +213,7 @@ Based on server code structure, these parameters are supported in the embedded J
 1. **Phase 2.1**: Update UI with basic controls
    - Size selector: 256x256, 512x512 (default), 1024x512, 512x1024, 1024x1024  
    - Quality presets: Low (4 steps, default), Medium (10 steps), High (20 steps)
-   - Collapsible advanced section (collapsed by default, no preset values)
+  - Advanced section always visible at the bottom of the form (no collapsing, no preset values)
 
 2. **Phase 2.2**: Implement embedded parameter system
    - Build XML embedding for quality presets (always) and advanced parameters (only when specified)

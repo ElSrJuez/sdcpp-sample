@@ -1,3 +1,34 @@
+### Advanced Parameters (Always Visible)
+```javascript
+// Advanced parameters - NO defaults, only sent when user specifies
+// UI always shows advanced controls at the bottom of the form (never collapsed)
+const ADVANCED_PARAMS = {
+   cfg_scale: null,       // Guidance scale (server default used if not specified)
+   seed: null,            // Random seed (server random if not specified)
+   negative_prompt: "",   // Things to avoid (empty = not sent)
+   clip_skip: null,       // CLIP layers to skip (server default if not specified)
+   batch_count: null      // Override n parameter (server default if not specified)
+};
+```
+2. **Advanced Mode**: Optional parameter control (always visible)
+    ```javascript
+    // Only build parameters that user explicitly set
+    const advancedParams = {};
+    if (customSteps && customSteps !== qualitySteps[quality]) advancedParams.steps = customSteps;
+    if (cfgScale && cfgScale !== "") advancedParams.cfg_scale = parseFloat(cfgScale);
+    if (seed && seed !== "") advancedParams.seed = parseInt(seed);
+    if (negativePrompt && negativePrompt.trim() !== "") advancedParams.negative_prompt = negativePrompt;
+    if (clipSkip && clipSkip !== "") advancedParams.clip_skip = parseInt(clipSkip);
+   
+    // Only embed if user set any advanced parameters
+    const fullPrompt = Object.keys(advancedParams).length > 0 
+       ? `${userPrompt} <sd_cpp_extra_args>${JSON.stringify(advancedParams)}</sd_cpp_extra_args>`
+       : `${userPrompt} <sd_cpp_extra_args>{"steps": ${qualitySteps[quality]}}</sd_cpp_extra_args>`;
+    ```
+1. **Phase 2.1**: Update UI with basic controls
+   - Size selector: 256x256, 512x512 (default), 1024x512, 512x1024, 1024x1024
+   - Quality presets: Low (4 steps, default), Medium (10 steps), High (20 steps)
+   - Advanced section always visible at the bottom of the form (no collapsing, no preset values)
 # Diffusion Image Generation Web App
 
 ## Overview

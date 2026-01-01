@@ -1,6 +1,6 @@
 # AI Image Generator
 
-**Version 0.1** - A simple yet elegant web application for generating AI images using Stable Diffusion. Built with Flask and optimized for mobile devices with a clean, modern interface.
+**Version 0.2** – A simple yet elegant web application for generating AI images using Stable Diffusion Cpp. Built with Flask and optimized for mobile devices with a clean, modern interface. Now with always-visible advanced controls (seed, steps, etc.) for power users.
 
 ## 🎯 Project Objectives
 
@@ -24,7 +24,8 @@
 - **Size & Quality Controls**: 5 size options (256²→1024²) and 3 quality presets (4/10/20 steps)
 - **Real-time Generation**: Async background processing with live progress updates
 - **Mobile Gallery**: Touch-optimized thumbnail gallery with AI metadata storage
-- **Advanced Parameters**: XML embedding system for server parameter control
+- **Advanced Controls Always Visible**: Power user parameters (seed, steps, etc.) are always accessible at the bottom of the form—no collapsing or hiding
+- **XML Parameter Embedding**: Full SD server control via prompt
 - **Config-Driven**: All settings externalized for easy customization and deployment
 
 ## 🚀 Quick Start
@@ -73,8 +74,8 @@
 
 The app delivers a premium mobile experience with:
 
-- **Touch-Optimized Controls**: Size and quality selectors designed for finger interaction
-- **Auto-Responsive Layout**: CSS Grid adapting seamlessly from mobile to desktop  
+- **Touch-Optimized Controls**: Size, quality, and advanced parameter selectors designed for finger interaction
+- **Auto-Responsive Layout**: CSS Grid adapting seamlessly from mobile to desktop
 - **Gesture Support**: Touch navigation through gallery with swipe interactions
 - **Progressive Loading**: Async job processing with real-time progress feedback
 - **Smooth Animations**: Polished transitions and loading states throughout the interface
@@ -96,12 +97,12 @@ The app delivers a premium mobile experience with:
 - **SD API Integration**: XML parameter embedding with timeout management
 - **Config Management**: Centralized settings with polling and timeout configuration
 
-### Frontend Features  
+### Frontend Features
 - **Mobile-First Interface**: Touch-optimized controls with auto-resizing components
 - **Responsive Design**: CSS Grid layouts adapting from mobile to desktop
 - **Async UI**: Real-time job polling with config-driven timeout management
 - **Gallery System**: Swipeable thumbnails with metadata display
-- **Parameter Controls**: Size selector and quality presets affecting generation
+- **Parameter Controls**: Size selector, quality presets, and always-visible advanced controls (seed, steps, etc.)
 
 ### Technical Stack
 - **Backend**: Flask 3.0.0 with Python threading for background jobs
@@ -139,9 +140,10 @@ diff-webapp/
 ## 🎯 Design Principles
 
 - **Simplicity First**: "Less is more" - minimal UI focused on essential features
-- **Config-Driven**: No hardcoded defaults or fallbacks - all settings externalized  
+- **Config-Driven**: No hardcoded defaults or fallbacks - all settings externalized
 - **DRY Architecture**: Don't Repeat Yourself - clean, maintainable code structure
 - **Mobile-Centric**: Touch-first design that scales up gracefully to desktop
+- **Advanced Controls Always Accessible**: Power user parameters are never hidden or collapsed
 - **Production Ready**: Comprehensive error handling, logging, and timeout management
 
 ## � Quick Start
@@ -175,37 +177,35 @@ diff-webapp/
    # Navigate to http://localhost:5000
    ```
 
-## �🚧 Development Status
+## 🚧 Development Status
 
-### ✅ Version 0.1 Complete
+### ✅ Version 0.2 Complete
 - **Phase 1**: Core functionality with mobile-first interface
-  - SD API integration with XML parameter embedding
-  - Touch-optimized prompt input and generation
-  - Async background processing with job management  
-  - Responsive image display and file management
+   - SD API integration with XML parameter embedding
+   - Touch-optimized prompt input and generation
+   - Async background processing with job management
+   - Responsive image display and file management
 
-- **Phase 2**: Enhanced gallery system  
-  - TinyDB metadata storage for AI generation history
-  - Mobile-responsive thumbnail gallery with touch navigation
-  - Real-time progress updates and error handling
-  - Size and quality controls affecting generation parameters
+- **Phase 2**: Enhanced gallery system
+   - TinyDB metadata storage for AI generation history
+   - Mobile-responsive thumbnail gallery with touch navigation
+   - Real-time progress updates and error handling
+   - Size and quality controls affecting generation parameters
 
-- **Server Integration**: Advanced parameter control
-  - 5 size options: 256×256, 512×512, 1024×512, 512×1024, 1024×1024
-  - 3 quality presets: Low (4 steps), Medium (10 steps), High (20 steps)
-  - XML embedding system: `<sd_cpp_extra_args>{"steps": N}</sd_cpp_extra_args>`
-  - Config-driven timeout alignment and polling management
+- **Advanced Controls**: Always-visible advanced parameter section
+   - Users can set seed and other advanced parameters directly, no collapsing or hiding
+   - XML embedding system: `<sd_cpp_extra_args>{...}</sd_cpp_extra_args>` for all advanced parameters
+   - Config-driven timeout alignment and polling management
 
-### 🔄 Ready for Production  
+### 🔄 Ready for Production
 - Complete mobile-first interface with touch optimization
 - Robust async processing with proper error handling and timeouts
 - Config-driven architecture with zero hardcoded values
 - Full gallery system with metadata storage and thumbnail generation
-- Advanced parameter control via server XML embedding system
+- Advanced parameter control via server XML embedding system (always visible)
 
-### 📋 Future Enhancements (Post-v0.1)
-- **Advanced Parameters**: Collapsible section for power users (cfg_scale, seed, negative_prompt)
-- **PWA Features**: Offline support and home screen installation capabilities  
+### 📋 Future Enhancements (Post-v0.2)
+- **PWA Features**: Offline support and home screen installation capabilities
 - **Enhanced Gestures**: Swipe batch generation and haptic feedback integration
 
 ## 🤝 Contributing

@@ -27,31 +27,7 @@ class ImageGenerator {
         // Auto-resize textarea on mobile
         this.promptInput.addEventListener('input', () => this.autoResize());
         
-        // Advanced panel toggle
-        this.initAdvancedPanel();
-        
         this.updateCharCount();
-    }
-
-    initAdvancedPanel() {
-        const toggle = document.getElementById('advancedToggle');
-        const content = document.getElementById('advancedContent');
-        
-        console.log('Advanced panel elements:', { toggle, content });
-        
-        if (toggle && content) {
-            toggle.addEventListener('click', () => {
-                console.log('Advanced panel clicked');
-                toggle.classList.toggle('expanded');
-                content.classList.toggle('expanded');
-                console.log('Classes after toggle:', {
-                    toggleClasses: toggle.className,
-                    contentClasses: content.className
-                });
-            });
-        } else {
-            console.error('Advanced panel elements not found:', { toggle, content });
-        }
     }
     
     updateCharCount() {
